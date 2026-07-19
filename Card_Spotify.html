@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card de Letra — gerador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0B0D0F;
+    --bg-1:#14171A;
+    --bg-2:#191D21;
+    --line:#23272B;
+    --line-strong:#2E3338;
+    --text-hi:#F5F6F4;
+    --text-mid:#B7BBC0;
+    --text-low:#7B8087;
+    --accent:#22D67B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg-0);color:var(--text-hi);font-family:'Inter',sans-serif;}
+  .app{min-height:100vh;padding:32px 24px 64px;}
+  .top{max-width:1180px;margin:0 auto 32px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;}
+  .top h1{font-family:'Sora',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em;margin:0;}
+  .top .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:10px;}
+  .top p{margin:0;color:var(--text-low);font-size:13px;}
+
+  .layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  @media (max-width:880px){.layout{grid-template-columns:1fr;}}
+
+  .panel{background:var(--bg-1);border:1px solid var(--line);border-radius:16px;padding:24px;}
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+  .field input[type=text], .field textarea{
+    width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;color:var(--text-hi);
+    padding:11px 13px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;
+  }
+  .field textarea{min-height:88px;line-height:1.5;}
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--line-strong);box-shadow:0 0 0 3px rgba(34,214,123,0.12);}
+  .hint{font-size:11px;color:var(--text-low);margin-top:6px;}
+
+  .filerow{display:flex;align-items:center;gap:12px;}
+  .filerow label.filebtn{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:500;
+    cursor:pointer;color:var(--text-hi);white-space:nowrap;
+  }
+  .filerow label.filebtn:hover{border-color:var(--line-strong);}
+  .filerow input[type=file]{display:none;}
+  .filerow span{font-size:12px;color:var(--text-low);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .clearimg{background:none;border:none;color:var(--text-low);font-size:12px;cursor:pointer;text-decoration:underline;padding:0;}
+
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;}
+  .swatch{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
+  .swatch.active{border-color:var(--text-hi);}
+
+  .segment{display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;}
+  .segment button{flex:1;background:none;border:none;color:var(--text-mid);font-size:13px;font-weight:500;padding:8px 4px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .segment button.active{background:var(--bg-1);color:var(--text-hi);}
+
+  .preview-col{display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .bgpicker{display:flex;gap:8px;align-self:flex-end;}
+  .bgpicker button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);cursor:pointer;position:relative;}
+  .bgpicker button.active{outline:2px solid var(--accent);outline-offset:2px;}
+  .bg-checker{background-image:linear-gradient(45deg,#3a3f44 25%,transparent 25%),linear-gradient(-45deg,#3a3f44 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#3a3f44 75%),linear-gradient(-45deg,transparent 75%,#3a3f44 75%);background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0;background-color:#20242a;}
+  .bg-light{background:#EDEBE3;}
+  .bg-dark{background:#0B0D0F;}
+
+  .canvas-wrap{
+    border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+    background-image:linear-gradient(45deg,#1c1f22 25%,transparent 25%),linear-gradient(-45deg,#1c1f22 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1c1f22 75%),linear-gradient(-45deg,transparent 75%,#1c1f22 75%);
+    background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;background-color:#101315;
+    padding:20px;
+  }
+  #cardCanvas{display:block;max-width:100%;height:auto;border-radius:8px;}
+
+  .actions{display:flex;gap:12px;align-items:center;}
+  .download-btn{
+    background:var(--accent);color:#06210F;border:none;border-radius:12px;padding:14px 26px;font-size:15px;font-weight:700;
+    cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px;
+  }
+  .download-btn:hover{filter:brightness(1.08);}
+  .download-btn svg{width:18px;height:18px;}
+  .note{font-size:12px;color:var(--text-low);text-align:center;max-width:340px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top">
+    <h1><span class="dot"></span>Card de letra</h1>
+    <p>Monte uma frase da música e baixe em PNG com fundo transparente.</p>
+  </div>
+
+  <div class="layout">
+
+    <div class="panel">
+      <div class="field">
+        <label for="lyric">Trecho da letra</label>
+        <textarea id="lyric" maxlength="220">e no fim, o que sobra é a gente</textarea>
+      </div>
+
+      <div class="field">
+        <label for="title">Nome da música</label>
+        <input type="text" id="title" maxlength="60" value="Nome da música">
+      </div>
+
+      <div class="field">
+        <label for="artist">Artista</label>
+        <input type="text" id="artist" maxlength="60" value="Nome do artista">
+      </div>
+
+      <div class="field">
+        <label>Capa do álbum</label>
+        <div class="filerow">
+          <label class="filebtn" for="coverInput">Escolher imagem</label>
+          <input type="file" id="coverInput" accept="image/*">
+          <span id="fileName">nenhuma imagem</span>
+          <button class="clearimg" id="clearImg" style="display:none">remover</button>
+        </div>
+        <div class="hint">Opcional — sem imagem, mostramos um ícone padrão.</div>
+      </div>
+
+      <div class="field">
+        <label>Cor de destaque</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="field">
+        <label>Cor do texto do card</label>
+        <div class="segment" id="textColorSeg">
+          <button data-val="light" class="active">Claro</button>
+          <button data-val="dark">Escuro</button>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0">
+        <label>Formato</label>
+        <div class="segment" id="formatSeg">
+          <button data-val="square" class="active">Quadrado</button>
+          <button data-val="post">Post 4:5</button>
+          <button data-val="story">Story 9:16</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-col">
+      <div class="bgpicker">
+        <button class="bg-checker active" data-bg="checker" title="Transparente"></button>
+        <button class="bg-light" data-bg="light" title="Fundo claro"></button>
+        <button class="bg-dark" data-bg="dark" title="Fundo escuro"></button>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="cardCanvas"></canvas>
+      </div>
+      <div class="actions">
+        <button class="download-btn" id="downloadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar PNG
+        </button>
+      </div>
+      <p class="note">O quadriculado é só uma pré-visualização — o arquivo baixado tem fundo 100% transparente, pronto pra colar em qualquer story ou post.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ACCENTS = ['#22D67B','#FF6F59','#5B8CFF','#C58BFF','#F2C744','#FFFFFF'];
+const FORMATS = {
+  square: {w:1080,h:1080},
+  post:   {w:1080,h:1350},
+  story:  {w:1080,h:1920}
+};
+
+let state = {
+  lyric: document.getElementById('lyric').value,
+  title: document.getElementById('title').value,
+  artist: document.getElementById('artist').value,
+  accent: ACCENTS[0],
+  textColor: 'light',
+  format: 'square',
+  coverImg: null
+};
+
+const canvas = document.getElementById('cardCanvas');
+const ctx = canvas.getContext('2d');
+const SCALE = 2;
+
+function buildSwatches(){
+  const wrap = document.getElementById('swatches');
+  ACCENTS.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className = 'swatch' + (i===0?' active':'');
+    b.style.background = c;
+    b.dataset.color = c;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      b.classList.add('active');
+      state.accent = c;
+      draw();
+    });
+    wrap.appendChild(b);
+  });
+}
+buildSwatches();
+
+document.getElementById('lyric').addEventListener('input', e=>{ state.lyric = e.target.value; draw(); });
+document.getElementById('title').addEventListener('input', e=>{ state.title = e.target.value; draw(); });
+document.getElementById('artist').addEventListener('input', e=>{ state.artist = e.target.value; draw(); });
+
+document.getElementById('textColorSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  state.textColor = btn.dataset.val;
+  draw();
+});
+
+document.getElementById('formatSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  state.format = btn.dataset.val;
+  draw();
+});
+
+document.getElementById('coverInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{
+      state.coverImg = img;
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('clearImg').style.display = 'inline';
+      draw();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('clearImg').addEventListener('click', ()=>{
+  state.coverImg = null;
+  document.getElementById('coverInput').value = '';
+  document.getElementById('fileName').textContent = 'nenhuma imagem';
+  document.getElementById('clearImg').style.display = 'none';
+  draw();
+});
+
+document.querySelectorAll('.bgpicker button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.bgpicker button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const wrap = document.getElementById('canvasWrap');
+    wrap.className = 'canvas-wrap';
+    if(b.dataset.bg==='light'){ wrap.style.backgroundImage='none'; wrap.style.backgroundColor='#EDEBE3'; }
+    else if(b.dataset.bg==='dark'){ wrap.style.backgroundImage='none'; wrap.style.backgroundColor='#0B0D0F'; }
+    else {
+      wrap.style.backgroundColor='#101315';
+      wrap.style.backgroundImage="linear-gradient(45deg,#1c1f22 25%,transparent 25%),linear-gradient(-45deg,#1c1f22 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1c1f22 75%),linear-gradient(-45deg,transparent 75%,#1c1f22 75%)";
+      wrap.style.backgroundSize='24px 24px';
+      wrap.style.backgroundPosition='0 0,0 12px,12px -12px,-12px 0';
+    }
+  });
+});
+
+function roundRectPath(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+
+function wrapText(c, text, maxWidth){
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = '';
+  words.forEach(w=>{
+    const test = cur ? cur+' '+w : w;
+    if(c.measureText(test).width > maxWidth && cur){
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = test;
+    }
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function fitLyric(c, text, maxWidth, maxHeight, weight, family){
+  let size = 84;
+  let lines, lineHeight;
+  while(size > 30){
+    c.font = `${weight} ${size}px '${family}', sans-serif`;
+    lines = wrapText(c, text, maxWidth);
+    lineHeight = size * 1.28;
+    if(lines.length * lineHeight <= maxHeight) break;
+    size -= 2;
+  }
+  return { size, lines, lineHeight };
+}
+
+function drawEqualizer(c, x, y, size, color){
+  const bars = [0.45, 1, 0.7, 0.55];
+  const gap = size*0.16;
+  const bw = (size - gap*(bars.length-1)) / bars.length;
+  c.fillStyle = color;
+  bars.forEach((h,i)=>{
+    const bh = size * h;
+    const bx = x + i*(bw+gap);
+    const by = y + (size - bh);
+    roundRectPath(c, bx, by, bw, bh, bw*0.3);
+    c.fill();
+  });
+}
+
+function drawCoverPlaceholder(c, x, y, w, h, r, accent){
+  roundRectPath(c,x,y,w,h,r);
+  const grad = c.createLinearGradient(x,y,x+w,y+h);
+  grad.addColorStop(0, accent);
+  grad.addColorStop(1, '#1a1c1f');
+  c.fillStyle = grad;
+  c.fill();
+  c.fillStyle = 'rgba(255,255,255,0.55)';
+  c.font = `700 ${w*0.42}px 'Sora', sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('♪', x+w/2, y+h/2+ w*0.03);
+}
+
+function draw(){
+  const fmt = FORMATS[state.format];
+  const W = fmt.w, H = fmt.h;
+  canvas.width = W*SCALE;
+  canvas.height = H*SCALE;
+  const displayScale = 460 / H;
+  canvas.style.width = (W*displayScale) + 'px';
+  canvas.style.height = (H*displayScale) + 'px';
+
+  ctx.setTransform(SCALE,0,0,SCALE,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const pad = 72;
+  const textMain = state.textColor === 'light' ? '#FFFFFF' : '#0B0D0F';
+  const textMuted = state.textColor === 'light' ? 'rgba(255,255,255,0.62)' : 'rgba(11,13,15,0.6)';
+
+  const rowH = 108;
+  const rowY = H - pad - rowH;
+
+  const thumb = 96;
+  const thumbY = rowY + (rowH-thumb)/2;
+  if(state.coverImg){
+    roundRectPath(ctx, pad, thumbY, thumb, thumb, 16);
+    ctx.save();
+    ctx.clip();
+    const img = state.coverImg;
+    const ir = img.width/img.height;
+    let dw, dh, dx, dy;
+    if(ir > 1){ dh = thumb; dw = thumb*ir; dx = pad-(dw-thumb)/2; dy = thumbY; }
+    else { dw = thumb; dh = thumb/ir; dx = pad; dy = thumbY-(dh-thumb)/2; }
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+  } else {
+    drawCoverPlaceholder(ctx, pad, thumbY, thumb, thumb, 16, state.accent);
+  }
+
+  const textX = pad + thumb + 26;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = textMain;
+  ctx.font = `700 34px 'Sora', sans-serif`;
+  const titleY = rowY + rowH/2 - 6;
+  ctx.fillText(truncateToWidth(ctx, state.title || 'Nome da música', W - textX - pad - 90), textX, titleY);
+
+  ctx.fillStyle = textMuted;
+  ctx.font = `500 26px 'Inter', sans-serif`;
+  ctx.fillText(truncateToWidth(ctx, state.artist || 'Nome do artista', W - textX - pad - 90), textX, titleY + 38);
+
+  drawEqualizer(ctx, W - pad - 56, rowY + rowH/2 - 28, 56, state.accent);
+
+  const lyricTop = pad + 148;
+  const lyricBottom = rowY - 56;
+  const maxWidth = W - pad*2;
+
+  ctx.font = `800 160px 'Sora', sans-serif`;
+  ctx.fillStyle = hexToRgba(state.accent, 0.32);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('\u201C', pad-10, pad+118);
+
+  const { size, lines, lineHeight } = fitLyric(ctx, state.lyric || ' ', maxWidth, lyricBottom-lyricTop, 800, 'Sora');
+  ctx.fillStyle = textMain;
+  ctx.font = `800 ${size}px 'Sora', sans-serif`;
+  const blockHeight = lines.length*lineHeight;
+  let startY = lyricTop + (lyricBottom-lyricTop-blockHeight)/2 + size*0.85;
+  lines.forEach(line=>{
+    ctx.fillText(line, pad, startY);
+    startY += lineHeight;
+  });
+}
+
+function truncateToWidth(c, text, maxWidth){
+  if(c.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while(t.length > 1 && c.measureText(t+'…').width > maxWidth){
+    t = t.slice(0,-1);
+  }
+  return t+'…';
+}
+
+function hexToRgba(hex, alpha){
+  let h = hex.replace('#','');
+  if(h.length===3) h = h.split('').map(c=>c+c).join('');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  canvas.toBlob(blob=>{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = (state.title || 'card-de-letra').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    a.href = url;
+    a.download = `${name || 'card-de-letra'}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+});
+
+if(document.fonts && document.fonts.ready){
+  document.fonts.load("800 84px 'Sora'");
+  document.fonts.load("700 34px 'Sora'");
+  document.fonts.load("500 26px 'Inter'");
+  document.fonts.ready.then(draw);
+}
+draw();
+setTimeout(draw, 300);
+setTimeout(draw, 800);
+</script>
+</body>
+</html>
